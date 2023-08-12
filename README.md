@@ -1,6 +1,10 @@
 
 # Samples: Ansible, Event Driven Ansible, GitOps, Cloud (AWS), OpenShift, Terraform
 
+We start with [installation](#1-installation-of-the-sample-data-centre-in-aws) of the sample Data Centre of four Linux boxes in AWS, then [deploy the sample App](#2-deploy-the-sample-app) into it. After that, we [deploy](#3-deploy-the-haproxy-load-balancer-and-health-checker) the HAProxy load balancer into the Data Centre and the Health Checker component into a free "Developer Sandbox" OpenShift environment. We try a [simple rolling update of the App](#4-simple-rolling-update-of-the-app) behind the just deployed HAProxy. Then we go ahead and try [GitOps-style rolling update](#5-gitops-style-rolling-update-of-the-app-from-a-different-github-repository) of the App from a different GitHub repository.
+
+Please do not forget to remove all the compute resources after you finish experimenting in order to not incur too much AWS costs. In the end, we [demonstrate](#6-dangerous-zone---removal-of-the-sample-data-centre) how to drop the four "sample Data Centre" `t2.micro` EC2 instances efficiently.
+
 ![automation-samples-preview.png](images%2Fautomation-samples-preview.png)
 
 ## Table of Contents
@@ -47,10 +51,6 @@ The sample App is a simple Web application served by Apache HTTP Server on Linux
     - Using a free "Developer Sandbox" OpenShift environment
 * Deploy a sample Datacentre of Linux boxes on AWS cloud with Terraform-based provisioning and Ansible-based configuration 
 * Automate updating installed Linux packages to their latest available versions
-
-We start with [installation of the sample Data Centre in AWS](#1-installation-of-the-sample-data-centre-in-aws), then [deploy the sample App](#2-deploy-the-sample-app) into it. After that, we [deploy](#3-deploy-the-haproxy-load-balancer-and-health-checker) the HAProxy load balancer into the Data Centre and the Health Checker component into a free "Developer Sandbox" OpenShift environment. We try a [simple rolling update of the App](#4-simple-rolling-update-of-the-app) behind the just deployed HAProxy. Then we go ahead and try [GitOps-style rolling update](#5-gitops-style-rolling-update-of-the-app-from-a-different-github-repository) of the App from a different GitHub repository.
-
-> Please do not forget to remove all the compute resources after you finish experimenting in order to not incur too much AWS costs. In the end, we [demonstrate](#6-dangerous-zone---removal-of-the-sample-data-centre) how to drop the four "sample Data Centre" `t2.micro` EC2 instances efficiently.
 
 [TOC](#table-of-contents)
 
