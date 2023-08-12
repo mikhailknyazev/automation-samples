@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sample Health Checker</title>
+    <link href="styles.css" rel="stylesheet"/>
+</head>
+<body>
+    <h1>Welcome to the sample Health Checker</h1>
+    <h2>The target HAProxy in front of the sample App instances is at <%= haproxy_public_ip %>. Monitoring is live:</h2>
+    <ul id="resultList"></ul>
+    <input type="hidden" id="haproxy_public_ip" value="<%= haproxy_public_ip %>" />
+    <script src="script.js"></script>
+</body>
+</html>
+
+
+

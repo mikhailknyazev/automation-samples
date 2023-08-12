@@ -1,0 +1,138 @@
+---
+- name: Rolling Update
+  hosts: "web"
+  become: yes
+  serial: 1
+  vars:
+    haproxy_backend_name: 'habackend'
+    application_repo: 'https://github.com/mikhailknyazev/automation-samples'
+    application_branch: main
+    subfolder_path: sample-app
+    application_path: /var/www/html
+  
+  tasks:
+
+    - name: Preparing rolling deployment of sample App
+      ansible.builtin.debug:
+        msg: >
+          Branch: {{ application_branch }}
+          Subfolder: {{ subfolder_path }}
+          Repo: {{ application_repo }}
+
+    - name: Verify application health
+      delegate_to: localhost
+      ansible.builtin.uri:
+        url: http://{{ inventory_hostname }}
+        status_code: 200
+        return_content: true
+      register: response
+    - name: Check if 'Serving from...' is in the response
+      delegate_to: localhost
+      ansible.builtin.assert:
+        that: "'Serving from {{ inventory_hostname }}' in response.content"
+        fail_msg: "The phrase 'Serving from {{ inventory_hostname }}' was not found in the response"
+
+    - name: Disable server in haproxy backend
+      community.general.haproxy:
+        state: disabled
+        host: '{{ inventory_hostname }}'
+        wait: yes
+        socket: "/var/lib/haproxy/stats"
+        backend: "{{ haproxy_backend_name }}"
+        fail_on_not_found: yes
+      delegate_to: '{{ item }}'
+      with_items: '{{ groups.loadbalancer }}'
+    
+    - name: Stop httpd service 
+      ansible.builtin.service:
+        name: httpd
+        state: stopped
+
+    - name: Update all packages
+      ansible.builtin.yum:
+        name: '*'
+        state: latest
+
+    - name: Delete content & directory if exists
+      ansible.builtin.file:
+        state: absent
+        path: "{{ application_path }}"
+
+    - name: Create application directory
+      ansible.builtin.file:
+        state: directory
+        path: "{{ application_path }}"
+        mode: '0755'
+
+    - name: Create a temporary directory
+      ansible.builtin.tempfile:
+        state: directory
+      register: temp_dir
+
+    - name: Git checkout the application
+      ansible.builtin.git:
+        repo: "{{ application_repo }}"
+        dest: "{{ temp_dir.path }}"
+        version: "{{ application_branch }}"
+        depth: 1
+        update: yes
+
+    - name: Copy files from the subfolder_path to application_path
+      copy:
+        remote_src: true
+        src: "{{ temp_dir.path }}/{{ subfolder_path }}/"
+        dest: "{{ application_path }}"
+
+    - name: Remove the used temp folder
+      file:
+        path: "{{ temp_dir.path }}"
+        state: absent
+
+    - name: Update the SERVER_DETAILS data
+      ansible.builtin.lineinfile:
+        path: "{{ application_path }}/index.html"
+        regexp: 'SERVER_DETAILS'
+        line: >
+          Serving from {{ ansible_hostname }} <br/> <br/>
+          Branch: {{ application_branch }} <br/> 
+          Subfolder: {{ subfolder_path }} <br/> 
+          Repo: {{ application_repo }}
+
+    - name: Start httpd service 
+      ansible.builtin.service:
+        name: httpd
+        state: started
+
+    - name: Verify application health
+      delegate_to: localhost
+      ansible.builtin.uri:
+        url: http://{{ inventory_hostname }}
+        status_code: 200
+        return_content: true
+      register: response
+    - name: Check if 'Serving from...' is in the response
+      delegate_to: localhost
+      ansible.builtin.assert:
+        that: "'Serving from {{ inventory_hostname }}' in response.content"
+        fail_msg: "The phrase 'Serving from {{ inventory_hostname }}' was not found in the response"
+
+    - name: Enable server in haproxy backend
+      community.general.haproxy:
+        state: enabled
+        host: '{{ inventory_hostname }}'
+        wait: yes
+        socket: "/var/lib/haproxy/stats"
+        backend: "{{ haproxy_backend_name }}"
+        fail_on_not_found: yes
+      delegate_to: '{{ item }}'
+      with_items: '{{ groups.loadbalancer }}'
+
+- name: Verify load balancer traffic
+  hosts: loadbalancer
+  become: no
+  tasks:
+    - name: Verify load balancer traffic
+      ansible.builtin.uri: 
+        url: http://{{ inventory_hostname }}
+        status_code: 200
+      delegate_to: localhost

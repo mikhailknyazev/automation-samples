@@ -1,0 +1,31 @@
+all:
+  children:
+    ansible:
+      hosts:
+        ansible-engine:
+          ansible_host: ${ansible-engine-host}
+          ansible_connection: local
+          ansible_python_interpreter: /usr/local/bin/python3.9
+          haproxy_public_ip: ${haproxy-public-ip}
+    nodes:
+      hosts:
+        node1:
+          ansible_host: ${node1-host}
+        node2:
+          ansible_host: ${node2-host}
+        node3:
+          ansible_host: ${node3-host}
+    web:
+      hosts:
+        node1:
+        node2:
+    loadbalancer:
+      hosts:
+        node3:
+  vars:
+    ansible_user: devops
+    ansible_password: devops
+    ansible_connection: ssh
+    ansible_ssh_extra_args: ' -o StrictHostKeyChecking=no -o PreferredAuthentications=password '
+    ansible_python_interpreter: /usr/bin/python2
+    ansible_ssh_private_key_file: /home/devops/.ssh/id_rsa

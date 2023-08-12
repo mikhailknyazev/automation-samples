@@ -1,0 +1,137 @@
+---
+- name: Deploying Application
+  hosts: "web"
+  become: yes
+  vars:
+    application_repo: 'https://github.com/mikhailknyazev/automation-samples'
+    application_branch: main
+    subfolder_path: sample-app
+    application_path: /var/www/html
+
+  tasks:
+
+    - name: Preparing deployment of sample App
+      ansible.builtin.debug:
+        msg: >
+          Branch: {{ application_branch }}
+          Subfolder: {{ subfolder_path }}
+          Repo: {{ application_repo }}
+
+    - name: Delete content & directory if exists
+      ansible.builtin.file:
+        state: absent
+        path: "{{ application_path }}"
+
+    - name: Create application directory
+      ansible.builtin.file:
+        state: directory
+        path: "{{ application_path }}"
+        mode: '0755'
+
+    - name: Install httpd, firewalld and Git packages
+      ansible.builtin.yum:
+        name: 
+          - httpd >= 2.4
+          - firewalld
+          - git
+        state: latest
+
+    - name: Enable CORS
+      ansible.builtin.lineinfile:
+        path: /etc/httpd/conf/httpd.conf
+        line: 'Header set Access-Control-Allow-Origin "*"'
+        insertafter: EOF
+        create: yes
+      notify: Restart Apache
+
+    - name: Allow HTTP methods
+      ansible.builtin.lineinfile:
+        path: /etc/httpd/conf/httpd.conf
+        regexp: '^Header set Access-Control-Allow-Methods'
+        line: 'Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS, no-cache"'
+        state: present
+      notify: Restart Apache
+
+    - name: Allow headers
+      ansible.builtin.lineinfile:
+        path: /etc/httpd/conf/httpd.conf
+        regexp: '^Header set Access-Control-Allow-Headers'
+        line: 'Header set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, Cache-Control"'
+        state: present
+      notify: Restart Apache
+
+    - name: Enable and Run firewalld service
+      ansible.builtin.service: 
+        name: firewalld
+        enabled: true
+        state: started
+
+    - name: Permit httpd service in firewall
+      firewalld:
+        service: http
+        permanent: true
+        state: enabled
+        immediate: yes
+
+    - name: Enable and start httpd service 
+      ansible.builtin.service:
+        name: httpd
+        enabled: true
+        state: started
+
+    - name: Create a temporary directory
+      ansible.builtin.tempfile:
+        state: directory
+      register: temp_dir
+
+    - name: Git checkout the application
+      ansible.builtin.git:
+        repo: "{{ application_repo }}"
+        dest: "{{ temp_dir.path }}"
+        version: "{{ application_branch }}"
+        depth: 1
+        update: yes
+
+    - name: Copy files from the subfolder_path to application_path
+      copy:
+        remote_src: true
+        src: "{{ temp_dir.path }}/{{ subfolder_path }}/"
+        dest: "{{ application_path }}"
+
+    - name: Remove the used temp folder
+      file:
+        path: "{{ temp_dir.path }}"
+        state: absent
+
+    - name: Update the SERVER_DETAILS data
+      ansible.builtin.lineinfile:
+        path: "{{ application_path }}/index.html"
+        regexp: 'SERVER_DETAILS'
+        line: >
+          Serving from {{ ansible_hostname }} <br/> <br/>
+          Branch: {{ application_branch }} <br/> 
+          Subfolder: {{ subfolder_path }} <br/> 
+          Repo: {{ application_repo }}
+
+  handlers:
+    - name: Restart Apache
+      ansible.builtin.service:
+        name: httpd
+        state: restarted
+
+- name: Verify deployment
+  hosts: "web"
+  become: no
+  tasks:
+    - name: Verify application health
+      delegate_to: localhost
+      ansible.builtin.uri: 
+        url: http://{{ inventory_hostname }}
+        status_code: 200
+        return_content: true
+      register: response
+    - name: Check if 'Serving from...' is in the response
+      delegate_to: localhost
+      ansible.builtin.assert:
+        that: "'Serving from {{ inventory_hostname }}' in response.content"
+        fail_msg: "The phrase 'Serving from {{ inventory_hostname }}' was not found in the response"

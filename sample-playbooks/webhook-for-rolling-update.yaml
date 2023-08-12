@@ -1,0 +1,34 @@
+---
+- name: Listen for events on a webhook
+  hosts: all
+
+  sources:
+    - ansible.eda.webhook:
+        host: 0.0.0.0
+        port: 5000
+      filters:
+        - ansible.eda.dashes_to_underscores:
+
+  rules:
+    - name: Handle Webhook event
+      condition: > 
+        event.payload is defined and event.meta.headers.X_GitHub_Event == "push" 
+        and event.payload.ref == vars.application_branch_in_webhook_event 
+        and event.payload.repository.url == vars.application_repo
+#      condition: event.payload is defined
+
+      action:
+        run_playbook:
+          name: rolling-update.yaml
+          extra_vars:
+            application_repo: "{{ application_repo }}"
+            application_branch: "{{ application_branch }}"
+            subfolder_path: "{{ subfolder_path }}"
+#        print_event:
+#          pretty: true
+#        debug:
+#          msg: >
+#            Branch: {{ application_branch }}
+#            Subfolder: {{ subfolder_path }}
+#            Repo: {{ application_repo }}
+#            Received: {{ event.meta.headers.X_GitHub_Event }} ; {{ event.payload.ref }} ; {{ event.payload.repository.url }}

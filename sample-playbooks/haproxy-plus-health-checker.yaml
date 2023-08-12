@@ -1,0 +1,48 @@
+---
+- name: Deploy Load Balancer using HAProxy
+  hosts: loadbalancer
+  become: yes
+  vars:
+    haproxy_frontend_name: 'hafrontend'
+    haproxy_backend_name: 'habackend'
+    haproxy_backend_servers:
+     - name: node1
+       address: node1:80
+     - name: node2
+       address: node2:80
+  tasks:
+
+    - name: Install haproxy
+      include_role:
+        name: geerlingguy.haproxy
+
+    - name: Install firewalld package
+      ansible.builtin.yum:
+        name:
+          - firewalld
+        state: latest
+
+    - name: Enable and Run firewalld service
+      ansible.builtin.service:
+        name: firewalld
+        enabled: true
+        state: started
+
+    - name: Permit port 80 in firewall
+      firewalld:
+        port: 80/tcp
+        permanent: true
+        state: enabled
+        immediate: yes
+
+- name: Verify load balancer deployment
+  hosts: loadbalancer
+  become: no
+  tasks:
+    - name: Verify load balancer health
+      ansible.builtin.uri:
+        url: http://{{ inventory_hostname }}
+        status_code: 200
+      delegate_to: localhost
+
+- import_playbook: health-checker.yaml

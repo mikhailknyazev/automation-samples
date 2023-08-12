@@ -1,0 +1,70 @@
+- name: Deploy the remote Health-Checker app into OpenShift
+  hosts: ansible-engine
+  gather_facts: no
+  become: no
+  vars_files:
+    - openshift-vars.yaml
+  vars:
+    health_checker_label: sample-health-checker
+  tasks:
+
+    - name: Delete the previously deployed version of Health-Checker, if any
+      ansible.builtin.command: >
+        oc --kubeconfig={{ openshift.kubeconfig_file }} delete all -l app={{ health_checker_label }}
+
+    - name: Display list of all Pods from the current Namespace (Project)
+      kubernetes.core.k8s_info:
+        kubeconfig: "{{ openshift.kubeconfig_file }}"
+        kind: Pod
+        namespace: "{{ openshift.namespace_name }}"
+      register: pod_list
+    - name: Print pod_list
+      debug:
+        var: pod_list
+
+    - name: Deploy the Health-Checker with OpenShift feature "Source-to-Image" (S2I)
+      ansible.builtin.command: >
+        oc --kubeconfig={{ openshift.kubeconfig_file }} new-app 
+        https://github.com/mikhailknyazev/automation-samples --context-dir=sample-health-checker --name={{ health_checker_label }}
+        -e HAPROXY_PUBLIC_IP={{ haproxy_public_ip }}
+
+    - name: Wait for the Health-Checker Deployment to be created
+      kubernetes.core.k8s_info:
+        kubeconfig: "{{ openshift.kubeconfig_file }}"
+        kind: Deployment
+        namespace: "{{ openshift.namespace_name }}"
+        label_selectors:
+          - "app={{ health_checker_label }}"
+      register: deployment_info
+      until: deployment_info.resources | length > 0
+      retries: 30
+      delay: 10
+
+    - name: Wait for the deployment to be ready
+      kubernetes.core.k8s_info:
+        kubeconfig: "{{ openshift.kubeconfig_file }}"
+        kind: Deployment
+        namespace: "{{ openshift.namespace_name }}"
+        label_selectors:
+          - "app={{ health_checker_label }}"
+      register: deployment
+      until: (deployment.resources[0].status.readyReplicas | default(0)) >= 1
+      retries: 10
+      delay: 10
+
+    - name: Expose the Health-Checker
+      ansible.builtin.command: >
+        oc --kubeconfig={{ openshift.kubeconfig_file }} expose svc/{{ health_checker_label }}
+
+    - name: Get the route to access the Health-Checker
+      ansible.builtin.command: >
+        oc --kubeconfig={{ openshift.kubeconfig_file }} 
+        get routes -l app=sample-health-checker -o jsonpath='{range .items[*]}{.spec.host}{end}'
+      register: routes_output
+      retries: 5
+      delay: 10
+      until: routes_output.stdout | length > 0
+
+    - name: Display the URL to access the Health-Checker
+      debug:
+        msg: "http://{{ routes_output.stdout }}/health"
