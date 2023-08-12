@@ -254,21 +254,21 @@ If all went well, it should result in something like the following:
 ...
 
 aws_instance.ansible-engine (remote-exec): PLAY RECAP *********************************************************************
-aws_instance.ansible-engine (remote-exec): ansible-engine             : ok=18   changed=16   unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
-aws_instance.ansible-engine (remote-exec): node1                      : ok=8    changed=7    unreachable=0    failed=0    skipped=10   rescued=0    ignored=0
-aws_instance.ansible-engine (remote-exec): node2                      : ok=8    changed=7    unreachable=0    failed=0    skipped=10   rescued=0    ignored=0
-aws_instance.ansible-engine (remote-exec): node3                      : ok=8    changed=7    unreachable=0    failed=0    skipped=10   rescued=0    ignored=0
+aws_instance.ansible-engine (remote-exec): ansible-engine             : ok=19   changed=17   unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+aws_instance.ansible-engine (remote-exec): node1                      : ok=8    changed=7    unreachable=0    failed=0    skipped=11   rescued=0    ignored=0
+aws_instance.ansible-engine (remote-exec): node2                      : ok=8    changed=7    unreachable=0    failed=0    skipped=11   rescued=0    ignored=0
+aws_instance.ansible-engine (remote-exec): node3                      : ok=8    changed=7    unreachable=0    failed=0    skipped=11   rescued=0    ignored=0
 
-aws_instance.ansible-engine: Creation complete after 9m59s [id=i-09078ee579028b6a1]
+aws_instance.ansible-engine: Creation complete after 10m21s [id=i-0dab06d54e2bdc870]
 
 Apply complete! Resources: 7 added, 0 changed, 0 destroyed.
 
 Outputs:
 
-ansible-engine = "13.239.0.188"
-ansible-node-1 = "3.106.138.174"
-ansible-node-2 = "3.25.244.181"
-ansible-node-3 = "54.252.69.170"
+ansible-engine = "54.206.175.29"
+ansible-node-1 = "3.25.54.116"
+ansible-node-2 = "13.211.228.54"
+ansible-node-3 = "54.252.188.204"
 ```
 
 The "PLAY RECAP" section above shows the final statistics for execution of the [configure-datacentre.yaml](sample-infra%2Ffiles-for-upload%2Fconfigure-datacentre.yaml) playbook, which is the Ansible-defined configuration of the sample Data Centre. The playbook gets executed automatically after the initial provisioning by Terraform.
@@ -277,29 +277,29 @@ Please save the resulting IP addresses for the EC2 instances (virtual machines) 
 ```
 Outputs:
 
-ansible-engine = "13.239.0.188"
-ansible-node-1 = "3.106.138.174"
-ansible-node-2 = "3.25.244.181"
-ansible-node-3 = "54.252.69.170"
+ansible-engine = "54.206.175.29"
+ansible-node-1 = "3.25.54.116"
+ansible-node-2 = "13.211.228.54"
+ansible-node-3 = "54.252.188.204"
 ```
 
 You will use them to ssh into them using the above-mentioned `ssh_pair_private_key`. That private key path was specified in the [variables.tf](./sample-infra/variables.tf). In our case, the value is:
 * `~/.ssh/automation-samples`
 
-Try ssh into the ansible-engine machine as follows, type `yes` when asked:
+Try ssh into the "ansible-engine" machine as follows, type `yes` when asked:
 ```shell
-$ ssh -i ~/.ssh/automation-samples devops@13.239.0.188
-The authenticity of host '13.239.0.188 (13.239.0.188)' can't be established.
-ED25519 key fingerprint is SHA256:mal1mcMRQT/xFhd9zEIjyKERZiVg81FFYQJV8b7yMfU.
-This key is not known by any other names
-Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
-Warning: Permanently added '13.239.0.188' (ED25519) to the list of known hosts.
-
-       __|  __|_  )
-       _|  (     /   Amazon Linux 2 AMI
-      ___|\___|___|
-
-https://aws.amazon.com/amazon-linux-2/
+$ ssh -i ~/.ssh/automation-samples devops@54.206.175.29
+# The authenticity of host '54.206.175.29 (54.206.175.29)' can't be established.
+# ED25519 key fingerprint is SHA256:ZCc7ex6vLRIP/fegV0g7b09gAB4JueeeR4rGoQmStd4.
+# This key is not known by any other names
+# Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+# Warning: Permanently added '54.206.175.29' (ED25519) to the list of known hosts.
+# 
+#        __|  __|_  )
+#        _|  (     /   Amazon Linux 2 AMI
+#       ___|\___|___|
+# 
+# https://aws.amazon.com/amazon-linux-2/
 [devops@ansible-engine ~]$ 
 ```
 
@@ -333,18 +333,18 @@ all:
     ansible:
       hosts:
         ansible-engine:
-          ansible_host: ip-172-31-35-87.ap-southeast-2.compute.internal
+          ansible_host: ip-172-31-12-216.ap-southeast-2.compute.internal
           ansible_connection: local
           ansible_python_interpreter: /usr/local/bin/python3.9
-          haproxy_public_ip: 54.252.69.170
+          haproxy_public_ip: 54.252.188.204
     nodes:
       hosts:
         node1:
-          ansible_host: ip-172-31-43-189.ap-southeast-2.compute.internal
+          ansible_host: ip-172-31-2-0.ap-southeast-2.compute.internal
         node2:
-          ansible_host: ip-172-31-34-110.ap-southeast-2.compute.internal
+          ansible_host: ip-172-31-15-111.ap-southeast-2.compute.internal
         node3:
-          ansible_host: ip-172-31-38-118.ap-southeast-2.compute.internal
+          ansible_host: ip-172-31-12-225.ap-southeast-2.compute.internal
     web:
       hosts:
         node1:
@@ -377,13 +377,13 @@ It should give its execution log as follows:
 Cloning into 'automation-samples'...
 remote: Enumerating objects: 73, done.
 remote: Counting objects: 100% (73/73), done.
-remote: Compressing objects: 100% (57/57), done.
-remote: Total 73 (delta 1), reused 60 (delta 0), pack-reused 0
-Receiving objects: 100% (73/73), 77.78 KiB | 8.64 MiB/s, done.
-Resolving deltas: 100% (1/1), done.
+remote: Compressing objects: 100% (60/60), done.
+remote: Total 73 (delta 2), reused 69 (delta 1), pack-reused 0
+Receiving objects: 100% (73/73), 55.12 KiB | 9.19 MiB/s, done.
+Resolving deltas: 100% (2/2), done.
 + sleep 1
 + rm -rf roles
-+ mv -f automation-samples/sample-playbooks/app-deploy.yaml automation-samples/sample-playbooks/app-rolling-update-webhook.yaml automation-samples/sample-playbooks/app-rolling-update.yaml automation-samples/sample-playbooks/haproxy-local-check.sh automation-samples/sample-playbooks/haproxy-plus-health-checker.yaml automation-samples/sample-playbooks/health-checker.yaml automation-samples/sample-playbooks/ping-all.yml automation-samples/sample-playbooks/roles .
++ mv -f automation-samples/sample-playbooks/app-deploy.yaml automation-samples/sample-playbooks/haproxy-local-check.sh automation-samples/sample-playbooks/haproxy-plus-health-checker.yaml automation-samples/sample-playbooks/health-checker.yaml automation-samples/sample-playbooks/ping-all.yml automation-samples/sample-playbooks/roles automation-samples/sample-playbooks/rolling-update.yaml automation-samples/sample-playbooks/webhook-for-rolling-update.yaml .
 + rm -rf automation-samples/
 ```
 
@@ -423,7 +423,7 @@ ansible-playbook [core 2.15.2]
   ansible python module location = /usr/local/lib/python3.9/site-packages/ansible
   ansible collection location = /home/devops/.ansible/collections:/usr/share/ansible/collections
   executable location = /usr/local/bin/ansible-playbook
-  python version = 3.9.17 (main, Jul 22 2023, 13:55:03) [GCC 7.3.1 20180712 (Red Hat 7.3.1-15)] (/usr/local/bin/python3.9)
+  python version = 3.9.17 (main, Aug 12 2023, 11:23:15) [GCC 7.3.1 20180712 (Red Hat 7.3.1-15)] (/usr/local/bin/python3.9)
   jinja version = 3.1.2
   libyaml = True
 ```
@@ -434,12 +434,12 @@ And Event Driven Ansible second:
 
 The expected output should be as follows:
 ```
-__version__ = '1.0.0'
-Executable location = /usr/local/bin/ansible-rulebook
-Drools_jpy version = 0.3.4
-Java home = /usr/lib/jvm/java-17-amazon-corretto.x86_64
-Java version = 17.0.8
-Python version = 3.9.17 (main, Jul 22 2023, 13:55:03) [GCC 7.3.1 20180712 (Red Hat 7.3.1-15)]
+__version__ = '1.0.1'
+  Executable location = /usr/local/bin/ansible-rulebook
+  Drools_jpy version = 0.3.4
+  Java home = /usr/lib/jvm/java-17-amazon-corretto.x86_64
+  Java version = 17.0.8
+  Python version = 3.9.17 (main, Aug 12 2023, 11:23:15) [GCC 7.3.1 20180712 (Red Hat 7.3.1-15)]
 ```
 
 Now, let's execute a simple playbook which pings all the hosts in the inventory `/home/devops/inventory.yaml`:
@@ -481,7 +481,6 @@ ansible-engine             : ok=2    changed=0    unreachable=0    failed=0    s
 node1                      : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
 node2                      : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
 node3                      : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
-
 ```
 
 [TOC](#table-of-contents)
@@ -502,13 +501,12 @@ web:
 
 The expected output should be as follows:
 ```
-
 ...
-TASK [Verify application health] ********************************************************************************************************************
-ok: [node1 -> localhost]
+TASK [Verify application health] ****************************************************************************************************************************
 ok: [node2 -> localhost]
+ok: [node1 -> localhost]
 
-TASK [Check if 'Serving from...' is in the response] ************************************************************************************************
+TASK [Check if 'Serving from...' is in the response] ********************************************************************************************************
 ok: [node1 -> localhost] => {
     "changed": false,
     "msg": "All assertions passed"
@@ -518,17 +516,17 @@ ok: [node2 -> localhost] => {
     "msg": "All assertions passed"
 }
 
-PLAY RECAP ******************************************************************************************************************************************
-node1                      : ok=19   changed=7    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
-node2                      : ok=19   changed=7    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+PLAY RECAP **************************************************************************************************************************************************
+node1                      : ok=20   changed=14   unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+node2                      : ok=20   changed=14   unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 ```
 
 In your browser, navigate to the previously saved IP addresses of the node1 and node2 (Web UI of the sample App instances):
 
-`ansible-node-1 = "3.106.138.174"`
+`ansible-node-1 = "3.25.54.116"`
 ![initial_node1.png](images%2Finitial_node1.png)
 
-`ansible-node-2 = "3.25.244.181"`
+`ansible-node-2 = "13.211.228.54"`
 ![initial_node2.png](images%2Finitial_node2.png)
 
 [TOC](#table-of-contents)
@@ -613,13 +611,13 @@ Navigate to your URL of the Health Checker shown in the end of the playbook run.
 In this example, it is as follows:
 * http://sample-health-checker-USERNAME-dev.apps.sandbox-n3.k4ri.p2.openshiftapps.com/health
 
-Notice the IP address for node3 (`ansible-node-3 = "54.252.69.170"`), it is mentioned in the following text in the Health Checker UI:
-* "The target HAProxy in front of the sample App instances is at `54.252.69.170`. Monitoring is live"
+Notice the IP address for node3 (`ansible-node-3 = "54.252.188.204"`), it is mentioned in the following text in the Health Checker UI:
+* "The target HAProxy in front of the sample App instances is at `54.252.188.204`. Monitoring is live"
 
 Also, the responses are delivered from either `node1` or `node2` -- depending on how the HAProxy load balancer balances the load of the call from the Health Checker.
 ![health-checker-01.png](images%2Fhealth-checker-01.png)
 
-You can actually navigate to the IP of the HAProxy Load Balancer and see content delivered, either from `node1` or `node2`: `http://54.252.69.170`
+You can actually navigate to the IP of the HAProxy Load Balancer and see content delivered, either from `node1` or `node2`: `http://54.252.188.204`
 
 [TOC](#table-of-contents)
 
@@ -651,7 +649,7 @@ What about the sample App update? We will instruct the [rolling-update.yaml](sam
 <!DOCTYPE html>
 <html>
 ...
-    <h2>Welcome to our sample App for requesting access privileges</h2>
+    <h2>Welcome to our sample App</h2>
     <h2>
         SERVER_DETAILS
         Version 2 of the App
@@ -687,11 +685,11 @@ And the Health Checker UI should show some interesting details, in particular:
 
 ## 5.1. Prepare a different GitHub repository for sample App
 
-Create a new **public** repository (e.g. `sample-app-test`) on GitHub and configure a Webhook for it as follows:
+Create a new **public** repository (e.g. `sample-app-test`) on GitHub (opt to create the initial `README.md` so that the `main` branch gets initialised) and configure a Webhook for it as follows:
 ![github-01.png](images%2Fgithub-01.png)
 
-Notice the following:
-* The `Payload URL` points to port 5000 of `ansible-engine (13.239.0.188)`: `http://13.239.0.188:5000/endpoint` (it is where Event Driven Ansible will be waiting for corresponding HTTP calls from GitHub)
+Note the following:
+* The `Payload URL` points to port 5000 of `ansible-engine (54.206.175.29)`: `http://54.206.175.29:5000/endpoint` (it is where Event Driven Ansible will be waiting for corresponding HTTP calls from GitHub)
 * The `Content type` is `application/json`
 * The question `Which events would you like to trigger this webhook?` answered with `Just the push event.`
 
@@ -735,7 +733,7 @@ Now, let's do some GitOps with the App!
 Navigate to the `index.html` of the App in the new repository and tap the "Edit" button.
 ![gitops-01.png](images%2Fgitops-01.png)
 
-> **WARNING**: Keep the `SERVER_DETAILS` string there -- it is updated by Ansible during deployments and eventually used for health checking. Add you custom content on lines **after** line with `SERVER_DETAILS`
+> **WARNING**: Keep the `SERVER_DETAILS` string there -- it is updated by Ansible during deployments and eventually used for health checking. Add your custom content on lines **after** line with `SERVER_DETAILS`
 
 Before tapping "Commit changes...", double-check the console with the `ansible-rulebook...` command running. Also, refresh your Health Checker screen in browser -- it will be soon showing progress of the GitOps-driven rolling update with Ansible!
 

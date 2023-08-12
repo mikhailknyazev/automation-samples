@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "dev": "HAPROXY_PUBLIC_IP=54.252.69.170 nodemon ./bin/www"
+    "dev": "HAPROXY_PUBLIC_IP=54.252.188.204 nodemon ./bin/www"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
