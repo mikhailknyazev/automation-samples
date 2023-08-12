@@ -88,19 +88,17 @@ $ cd automation-samples/
 
 ## Step 1.3. Configure AWS Credentials
 
-Goto AWS Console – > IAM -> Users -> Add User and select "Programmatic access"
-Grant the user the AdministratorAccess role.
-Important: Copy the "Access key ID" and "Secret access key" as we need this in next steps.
+Go to "AWS Console" –> "IAM" -> "Users" -> "Add User" and select "Programmatic access".
+Grant the user the `AdministratorAccess` role.
+>Important: Copy the "Access key ID" and "Secret access key" as we need this in next steps.
 
-On your computer, add the new AWS Credentials as follows. If you have already configured other credentials, then add this as new profile -- `[automation-samples]` in the example below. Add your two values:
+On your computer, add the new AWS Credentials as follows. If you have already configured other credentials, then add this as new profile -- `[automation-samples]` in the example below. Add your two values there correspondingly:
 * "Access key ID"
 * "Secret access key"
 
-there correspondingly.
-
 The file now can look as follows:
 
-$ cat ~/.aws/credentials
+`$ cat ~/.aws/credentials`
 ```
 [default]
 aws_access_key_id=BUIA5WGDUFEXAMPLEKoP
@@ -111,17 +109,16 @@ aws_access_key_id=AKIA5WGDZFEXAMPLEKEY
 aws_secret_access_key=Wb1v7OXMMYNRlNYXOGK5sPxZEXAMPLEACCESSKEY
 ```
 
-Remember to use the correct profile name in your terraform script [variables.tf](./sample-infra/variables.tf). It is `automation-samples` in our case for variable `aws_profile`.
+Remember to use the correct profile name in your terraform file [variables.tf](./sample-infra/variables.tf). It is `automation-samples` in our case for variable `aws_profile`.
 
-You might also wish to update the AWS Region to use for deployment. It is configured in the same file  [variables.tf](./sample-infra/variables.tf) -- the `aws_region` variable -- which defaults to `ap-southeast-2`.
-
-Note: if you are changing the AWS Region to use, you will likely need to update the base `aws_ami_id`. Please see corresponding comments in file  [variables.tf](./sample-infra/variables.tf) for that variable.
+You might also wish to update the AWS Region to use for deployment. It is configured in the same file  [variables.tf](./sample-infra/variables.tf) (the `aws_region` variable), it defaults to `ap-southeast-2`.
+Note: if you are changing the target AWS Region, then you will likely need to update the base `aws_ami_id`. Please see corresponding comments in file  [variables.tf](./sample-infra/variables.tf) for that variable.
 
 [TOC](#table-of-contents)
 
 ## Step 1.4. Create SSH Keys
 
-Create SSH Keys to Access the AWS EC2 instances (virtual machines).
+Create SSH Keys to access the AWS EC2 instances (virtual machines) of the  "sample Data Centre".
 
 For example, you can run the following command:
 ```shell
@@ -142,9 +139,9 @@ Here's what each part of the command does:
 After running this command, you will have two files in the `~/.ssh/` directory:
 
 * `automation-samples`: This is the private key file. Keep this file secure and never share it with anyone.
-* `automation-samples.pub`: This is the public key file. You can share this key with remote systems that you want to access using SSH.
+* `automation-samples.pub`: This is the public key file. You can share this key with remote systems that you want to access using SSH. Our scripts will automatically install it into the "sample Data Centre" EC2 instances.
 
-Remember to use the correct key names in your terraform script [variables.tf](./sample-infra/variables.tf). In our case, the values are:
+Remember to use the correct key names in your terraform file [variables.tf](./sample-infra/variables.tf). In our case, the values are:
 * `~/.ssh/automation-samples` for variable `ssh_pair_private_key`
 * `~/.ssh/automation-samples.pub` for variable `ssh_pair_public_key`
 
@@ -152,9 +149,9 @@ Remember to use the correct key names in your terraform script [variables.tf](./
 
 ## Step 1.5. Create all
 
-Create the sample Data Centre in AWS with Terraform and Ansible,
+Create the sample Data Centre in AWS with Terraform and Ansible!
 
-Verify you are in the home folder of the repository in your CLI:
+First, verify you are in the home folder of the repository in your CLI:
 ```shell
 $ pwd
 # /Users/myusername/.../automation-samples
@@ -211,7 +208,10 @@ $ terraform plan
 # + ansible-node-3 = (known after apply)
 ```
 
-Apply the proposed plan if you are happy with it, enter "yes" when asked. This step will spin up all the sample Data Centre resources in your AWS Account.
+Apply the proposed plan if you are happy with it.
+> Note: Creation of the four `t2.micro` EC2 instances will lead to some moderate AWS costs. Please do not forget to [remove all](#6-dangerous-zone---removal-of-the-sample-data-centre) after you finish experimenting.
+ 
+Enter "yes" when asked. This step will spin up all the sample Data Centre resources in your AWS Account.
 
 ```shell
 $ terraform apply
@@ -306,9 +306,9 @@ $ ssh -i ~/.ssh/automation-samples devops@54.206.175.29
 Congratulations! You are on the primary virtual machine of the sample Date Centre.
 
 The following files should be there:
-```shell
-[devops@ansible-engine ~]$ ls -1
 
+`[devops@ansible-engine ~]$ ls -1`
+```
 ansible.cfg
 get-automation-sample-playbooks.sh
 inventory.yaml
@@ -316,7 +316,7 @@ openshift-prepare.sh
 webhook-prepare.sh
 ```
 
-The needed for Ansible to run from the "ansible-engine" machine files have been prepared for you. They are the `ansible.cfg` configuration file and the `inventory.yaml` static inventory file. They should look as follows:
+The needed for Ansible files have been prepared for you on the "ansible-engine" machine. They are the `ansible.cfg` configuration file and the `inventory.yaml` static inventory file. They should look as follows:
 
 `[devops@ansible-engine ~]$ cat ansible.cfg`
 ```
@@ -365,13 +365,13 @@ all:
 
 ## Step 1.6. Verify all
 
-Verify all the virtual machines in the sample Data Centre are under "ansible-engine" control.
+Let's verify all the created machines are under Ansible control.
 
-It is time to get the playbooks pertaining to the "sample project" MVP onto the `ansible-engine` machine. Run the following:
+It is time to get the sample playbooks onto the "ansible-engine" machine. Run the following:
 
 `[devops@ansible-engine ~]$ ./get-automation-sample-playbooks.sh`
 
-It should give its execution log as follows:
+It should give execution log as follows:
 ```
 + git clone --depth 1 --branch main https://github.com/mikhailknyazev/automation-samples.git automation-samples
 Cloning into 'automation-samples'...
@@ -387,7 +387,7 @@ Resolving deltas: 100% (2/2), done.
 + rm -rf automation-samples/
 ```
 
-Have a look at the newly retrieved playbook and rulebook files in the same folder:
+Have a look at the newly retrieved playbooks / rulebooks in the same folder:
 
 `[devops@ansible-engine ~]$ ls -t1`
 ```
@@ -409,7 +409,7 @@ get-automation-sample-playbooks.sh
 ansible.cfg
 ```
 
-Let's run the following to check Ansible and Event Driven Ansible are healthy on the `ansible-engine` machine:
+Let's run the following to check Ansible and Event Driven Ansible are healthy on the "ansible-engine" machine:
 
 Ansible first:
 
@@ -445,8 +445,8 @@ __version__ = '1.0.1'
 Now, let's execute a simple playbook which pings all the hosts in the inventory `/home/devops/inventory.yaml`:
 
 Here is the playbook:
-`[devops@ansible-engine ~]$ cat ping-all.yml`
 
+`[devops@ansible-engine ~]$ cat ping-all.yml`
 ```yaml
 ---
 - name: Ping all hosts
@@ -456,11 +456,11 @@ Here is the playbook:
       ansible.builtin.ping:
 ```
 
-We need to execute the following:
+Let's execute it as follows:
 
 `[devops@ansible-engine ~]$ ansible-playbook ping-all.yml`
 
-The expected output should be as follows:
+The expected output:
 ```
 PLAY [Ping all hosts] *******************************************************************************************************************************
 
@@ -487,7 +487,7 @@ node3                      : ok=2    changed=0    unreachable=0    failed=0    s
 
 # 2. Deploy the sample App
 
-We need to execute the following for the hosts in the `web` group as defined in the inventory:
+We need to execute the following for the `web` group in the inventory:
 ```yaml
 ...
 web:
@@ -499,7 +499,7 @@ web:
 
 `[devops@ansible-engine ~]$` ansible-playbook [app-deploy.yaml](sample-playbooks%2Fapp-deploy.yaml)
 
-The expected output should be as follows:
+The expected output:
 ```
 ...
 TASK [Verify application health] ****************************************************************************************************************************
@@ -541,7 +541,7 @@ The Health Checker will be deployed into a standard "Developer Sandbox" OpenShif
 After registration, you should have access to your project in the "Developer Sandbox" as follows:
 ![initial_oc.png](images%2Finitial_oc.png)
 
-Tap the question mark icon in the top-right. Choose "Command line tools". Tap the "Copy login command" link. Go ahead with the login. Tap "Display token". Copy the following (your values) from the screen:
+Tap the question mark icon in the top-right. Choose "Command line tools". Tap the "Copy login command" link. Go ahead with the login. Tap "Display token". Copy your values from the screen:
 
 ```
 Log in with this token
@@ -549,13 +549,15 @@ Log in with this token
 oc login --token=sha256~812G1w6UioKITX-95sV7vUoPptCasa0jjhsdjhdViQt --server=https://api.sandbox-n3.k4ri.p2.openshiftapps.com:6443
 ```
 
-In the following preparation step you will need the following values as shown above:
+In the next preparation step you will need the following values from above:
 * `openshift_host`: sandbox-n3.k4ri.p2.openshiftapps.com
 * `openshift_token`: sha256~812G1w6UioKITX-95sV7vUoPptCasa0jjhsdjhdViQt
 
+Run using your values:
+
 `[devops@ansible-engine ~]$` ./[openshift-prepare.sh](sample-infra%2Ffiles-for-upload%2Fopenshift-prepare.sh) <openshift_host> <openshift_token>
 
-The expected output should be as follows:
+The expected output:
 ```
 OpenShift Host is: sandbox-n3.k4ri.p2.openshiftapps.com
 OpenShift Token is: sha2...
@@ -581,7 +583,7 @@ Double-check you now have the `oc` OpenShift CLI installed and configured for ac
 
 `[devops@ansible-engine ~]$ oc get pods`
 
-The expected output should be as follows:
+The expected output:
 ```
 No resources found in USERNAME-dev namespace.
 ```
@@ -594,7 +596,7 @@ The following playbook installs the HAProxy load balancer onto the `node3` machi
 
 `[devops@ansible-engine ~]$` ansible-playbook [haproxy-plus-health-checker.yaml](sample-playbooks%2Fhaproxy-plus-health-checker.yaml)
 
-The expected output should be as follows:
+The expected output:
 ```
 ...
 TASK [Display the URL to access the Health-Checker] *************************************************************************************************
@@ -634,7 +636,7 @@ Notice `serial: 1` in its top. It ensures the logic gets applied to the hosts in
   serial: 1
 ...
 ```
-Also, when corresponding node is temporarily "offline" for the update, the following updates Linux packages on the box to the latest version. It demonstrates how patching can be done during rolling update:
+Also, when corresponding node is temporarily "offline", the following updates Linux packages on the box to the latest versions. It demonstrates how patching can be done during rolling update:
 ```yaml
 ...
 - name: Update all packages
@@ -662,7 +664,7 @@ Let's start the following and immediately refresh the Health Checker UI in your 
 
 `[devops@ansible-engine ~]$` ansible-playbook [rolling-update.yaml](sample-playbooks%2Frolling-update.yaml) --extra-vars application_branch=sample-app-v2
 
-The expected output should be as follows:
+The expected output when it completes is as follows:
 ```
 ...
 PLAY RECAP ******************************************************************************************************************************************
@@ -685,13 +687,13 @@ And the Health Checker UI should show some interesting details, in particular:
 
 ## 5.1. Prepare a different GitHub repository for sample App
 
-Create a new **public** repository (e.g. `sample-app-test`) on GitHub (opt to create the initial `README.md` so that the `main` branch gets initialised) and configure a Webhook for it as follows:
+Create a new **public** repository, e.g. `sample-app-test`, on GitHub (opt to create the initial `README.md` so that the `main` branch gets initialised) and configure a Webhook for it as follows:
 ![github-01.png](images%2Fgithub-01.png)
 
 Note the following:
-* The `Payload URL` points to port 5000 of `ansible-engine (54.206.175.29)`: `http://54.206.175.29:5000/endpoint` (it is where Event Driven Ansible will be waiting for corresponding HTTP calls from GitHub)
-* The `Content type` is `application/json`
-* The question `Which events would you like to trigger this webhook?` answered with `Just the push event.`
+* The `Payload URL` points to port `5000` of the "ansible-engine" machine: `http://54.206.175.29:5000/endpoint` . **It is where Event Driven Ansible will be waiting for corresponding HTTP calls from GitHub.**
+* The `Content type` selected is `application/json`
+* Question "Which events would you like to trigger this webhook?" answered with `Just the push event.`
 
 Add the **whole directory** [sample-app](sample-app) to the root of the `main` branch in the new repository. For example, you can do it right in GitHub UI:
 * Choose "Upload files"
@@ -699,20 +701,22 @@ Add the **whole directory** [sample-app](sample-app) to the root of the `main` b
 * Drag&Drop the whole "sample-app" folder from your OS into the newly created repo, e.g.: https://github.com/mikhailknyazev/sample-app-test
   ![github-03.png](images%2Fgithub-03.png)
 * Choose "Commit"
-* Verify you have the App in the directory `sample-app` in the newly created repository:
+* Verify you have the App in the directory `sample-app` in the new repository:
   ![github-04.png](images%2Fgithub-04.png)
 
 [TOC](#table-of-contents)
 
 ## 5.2. Run the components
 
-In the following preparation step you will need the following values:
-* `application_repo`: Your newly created GitHib public repository with the `sample-app` folder. It should look similar to: `https://github.com/mikhailknyazev/sample-app-test`
-* `application_branch`: It should look similar to: `main`
+First, prepare your values as follows:
+* `application_repo`: It is your new GitHub repository you just added the `sample-app` folder into. It should look similar to: `https://github.com/mikhailknyazev/sample-app-test`
+* `application_branch`: It should likely be `main`
+
+Run the following using your values:
 
 `[devops@ansible-engine ~]$` ./[webhook-prepare.sh](sample-infra%2Ffiles-for-upload%2Fwebhook-prepare.sh) <application_repo> <application_branch>
 
-The expected output should be as follows:
+The expected output:
 ```
 ---
 application_repo: https://github.com/mikhailknyazev/sample-app-test
@@ -724,11 +728,13 @@ Created:
 /home/devops/webhook-vars.yaml
 ```
 
+Now start the rulebook with Event Driven Ansible:
+
 `[devops@ansible-engine ~]$` ansible-rulebook --rulebook [webhook-for-rolling-update.yaml](sample-playbooks%2Fwebhook-for-rolling-update.yaml) -i inventory.yaml --vars webhook-vars.yaml
 
-It should get started and stay silent.
+It should start and stay silent.
 
-Now, let's do some GitOps with the App!
+It is time to do some GitOps with the App!
 
 Navigate to the `index.html` of the App in the new repository and tap the "Edit" button.
 ![gitops-01.png](images%2Fgitops-01.png)
@@ -749,16 +755,14 @@ Also, the Health Checker is tracking the updates correspondingly:
 
 # 6. Dangerous zone - removal of the sample Data Centre
 
-When you are done with your experiments, destroy the resources created for the sample Data Centre in AWS.
-
-On your local computer, where you have Terraform installed, change directory into `automation-samples/sample-infra`:
+When you are done with your experiments, destroy the resources created for the sample Data Centre in your AWS account. On your local computer, change directory into `automation-samples/sample-infra`:
 
 ```shell
 $ pwd
 # /Users/myusername/.../automation-samples/sample-infra
 ```
 
-> **WARNING:** Run the following and type `yes` when asked -- if you indeed want to drop the resources according to the presented by Terraform plan:
+> **WARNING:** If you want to drop the resources according to the presented by Terraform plan indeed, then run the following and type `yes` when asked:
 ```shell
 terraform destroy
 ```
