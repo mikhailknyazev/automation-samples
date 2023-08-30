@@ -687,6 +687,10 @@ And the Health Checker UI should show some interesting details, in particular:
 
 # 5. GitOps-style rolling update of the App from a different GitHub repository
 
+The following video (no sound) demonstrates the explained in section "5.2. Run the components" below.
+
+[![](https://markdown-videos-api.jorgenkh.no/youtube/tovjvDNyR6k)](https://youtu.be/tovjvDNyR6k)
+
 ## 5.1. Prepare a different GitHub repository for sample App
 
 Create a new **public** repository, e.g. `sample-app-test`, on GitHub (opt to create the initial `README.md` so that the `main` branch gets initialised) and configure a Webhook for it as follows:
